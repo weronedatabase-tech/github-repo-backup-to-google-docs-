@@ -1,0 +1,16 @@
+{
+  "name": "GitHub Repo Backup",
+  "short_name": "RepoBackup",
+  "description": "Backup GitHub repositories to Google Docs",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#1a73e8",
+  "icons":[
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzFBNzNFOCIvPjx0ZXh0IHk9IjUwJSIgeD0iNTAlIiBkeT0iLjM1ZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iNTBweCIgZmlsbD0id2hpdGUiPkI8L3RleHQ+PC9zdmc+",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
