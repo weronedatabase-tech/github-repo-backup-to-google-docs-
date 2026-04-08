@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Repo Backup PWA</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a73e8">
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f8; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); width: 100%; max-width: 500px; box-sizing: border-box;}
+    h2 { margin-top: 0; color: #202124; text-align: center; margin-bottom: 25px;}
+    
+    /* Input & Forms */
+    .form-group { margin-bottom: 20px; position: relative; }
+    label { display: block; font-weight: 600; margin-bottom: 8px; color: #5f6368; font-size: 14px; }
+    input[type="text"], input[type="password"], select { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #dadce0; border-radius: 6px; font-size: 15px; background-color: #fff; transition: border 0.3s;}
+    input:focus, select:focus { outline: none; border-color: #1a73e8; }
+    
+    /* Password Toggle Minimalist Design */
+    .pwd-wrapper { position: relative; }
+    .toggle-pwd { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 0; color: #9aa0a6; }
+    .toggle-pwd svg { width: 20px; height: 20px; fill: currentColor; transition: color 0.2s;}
+    .toggle-pwd:hover { color: #5f6368; }
+
+    /* Buttons */
+    .btn { background-color: #1a73e8; color: white; padding: 14px; border: none; cursor: pointer; font-size: 16px; border-radius: 6px; width: 100%; font-weight: 600; transition: background 0.3s; }
+    .btn:hover { background-color: #1557b0; }
+    .btn:disabled { background-color: #a8c7fa; cursor: not-allowed; }
+    
+    /* Utils */
+    .hidden { display: none; }
+    #status { margin-top: 20px; font-size: 14px; padding: 12px; border-radius: 6px; text-align: center; }
+    .divider { display: flex; align-items: center; text-align: center; margin: 20px 0; color: #bdc1c6; font-size: 13px; font-weight: 600; text-transform: uppercase;}
+    .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e8eaed; }
+    .divider::before { margin-right: 15px; }
+    .divider::after { margin-left: 15px; }
+    .checkbox-label { display: flex; align-items: center; font-weight: normal; font-size: 14px; color: #3c4043; cursor: pointer;}
+    .checkbox-label input { margin-right: 10px; width: 16px; height: 16px; cursor: pointer;}
+    .note { font-size: 12px; color: #80868b; margin-top: 6px; line-height: 1.4;}
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN VIEW -->
+  <div id="login-view" class="container">
+    <h2>Secure Login</h2>
+    <div class="form-group">
+      <label>App Password</label>
+      <div class="pwd-wrapper">
+        <input type="password" id="appPassword" placeholder="Enter password" onkeydown="handleEnter(event)">
+        <button type="button" class="toggle-pwd" onclick="togglePassword()" title="Show/Hide Password">
+          <!-- Minimalist Eye SVG -->
+          <svg id="eye-icon" viewBox="0 0 24 24">
+            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <button id="loginBtn" class="btn" onclick="login()">Login</button>
+    <div id="loginStatus" class="note" style="color: #d93025; text-align: center; margin-top: 15px;"></div>
+  </div>
+
+  <!-- MAIN APP VIEW -->
+  <div id="app-view" class="container hidden">
+    <h2>GitHub Repo Backup</h2>
+    
+    <div class="form-group">
+      <label>Select Repository</label>
+      <select id="repoSelect" onchange="handleRepoSelection()">
+        <option value="">Loading your repositories...</option>
+      </select>
+    </div>
+
+    <div class="divider">OR</div>
+    
+    <div class="form-group">
+      <label>Paste Repo URL</label>
+      <input type="text" id="repoUrl" placeholder="https://github.com/owner/repo" oninput="document.getElementById('repoSelect').selectedIndex=0">
+    </div>
+    
+    <div class="form-group" style="display:flex; gap: 15px;">
+      <div style="flex:1;">
+        <label>Branch</label>
+        <input type="text" id="branch" value="main">
+      </div>
+      <div style="flex:1;">
+        <label>Tab / Section Name</label>
+        <input type="text" id="tabName" placeholder="e.g., Frontend">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Google Doc Filename</label>
+      <input type="text" id="docName" placeholder="Leave blank to auto-generate">
+    </div>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="isUpdate" onchange="document.getElementById('existingFileGroup').style.display = this.checked ? 'block' : 'none'"> 
+        <strong>Update Existing Document?</strong>
+      </label>
+    </div>
+
+    <div class="form-group hidden" id="existingFileGroup">
+      <label>Google Doc URL or ID</label>
+      <input type="text" id="fileId" placeholder="Paste full link here">
+      <div class="note">⚠️ Existing contents will be overwritten.</div>
+    </div>
+
+    <button id="runBtn" class="btn" onclick="startBackup()">Start Backup</button>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    // ==========================================
+    // CONFIGURATION
+    // ==========================================
+    // YOUR LIVE GOOGLE APPS SCRIPT WEB APP URL:
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbz6o6eW27oFWZmgXF-UpokwRX4bRwptHusJVoaGTlueJ9mrcMHm9OS5EhDhPBoqSqAS/exec';
+    
+    let activePassword = '';
+
+    // ==========================================
+    // UI HANDLERS
+    // ==========================================
+    function togglePassword() {
+      const input = document.getElementById('appPassword');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function handleEnter(event) {
+      if (event.key === 'Enter') login();
+    }
+
+    // ==========================================
+    // API COMMUNICATION 
+    // ==========================================
+    async function apiRequest(action, data = {}) {
+      // GAS requires Content-Type text/plain to avoid tricky CORS preflight loops
+      const response = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: action, password: activePassword, data: data })
+      });
+      return await response.json();
+    }
+
+    // ==========================================
+    // CORE LOGIC
+    // ==========================================
+    async function login() {
+      const pwdInput = document.getElementById('appPassword').value;
+      const btn = document.getElementById('loginBtn');
+      const status = document.getElementById('loginStatus');
+      
+      if (!pwdInput) return;
+      activePassword = pwdInput;
+      btn.disabled = true;
+      btn.innerText = 'Verifying...';
+      
+      try {
+        const res = await apiRequest('login');
+        if (res.success) {
+          document.getElementById('login-view').classList.add('hidden');
+          document.getElementById('app-view').classList.remove('hidden');
+          loadRepos();
+        } else {
+          throw new Error(res.error);
+        }
+      } catch (err) {
+        status.innerText = err.message;
+        btn.disabled = false;
+        btn.innerText = 'Login';
+      }
+    }
+
+    async function loadRepos() {
+      const select = document.getElementById('repoSelect');
+      try {
+        const res = await apiRequest('getRepos');
+        if (!res.success || res.repos.length === 0) {
+          select.innerHTML = '<option value="">No repos found. Use manual input.</option>';
+          return;
+        }
+        select.innerHTML = '<option value="">-- Choose a repository --</option>';
+        res.repos.forEach(repo => {
+          const opt = document.createElement('option');
+          opt.value = repo.url; opt.text = repo.name; opt.dataset.branch = repo.branch;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        select.innerHTML = '<option value="">Failed to load repos.</option>';
+      }
+    }
+
+    function handleRepoSelection() {
+      const select = document.getElementById('repoSelect');
+      const opt = select.options[select.selectedIndex];
+      if (opt.value) {
+        document.getElementById('repoUrl').value = opt.value;
+        document.getElementById('docName').value = 'Codebase Backup: ' + opt.text.split('/')[1];
+        if (opt.dataset.branch) document.getElementById('branch').value = opt.dataset.branch;
+      }
+    }
+
+    async function startBackup() {
+      const btn = document.getElementById('runBtn');
+      const status = document.getElementById('status');
+      const params = {
+        repoUrl: document.getElementById('repoUrl').value,
+        branch: document.getElementById('branch').value,
+        docName: document.getElementById('docName').value,
+        tabName: document.getElementById('tabName').value,
+        isUpdate: document.getElementById('isUpdate').checked,
+        fileId: document.getElementById('fileId').value
+      };
+
+      if (!params.repoUrl) return alert('Please enter a repo URL');
+      if (params.isUpdate && !params.fileId) return alert('Provide Doc ID to update');
+
+      btn.disabled = true;
+      btn.innerText = 'Processing...';
+      status.style.backgroundColor = 'transparent';
+      status.innerHTML = '';
+
+      try {
+        const res = await apiRequest('processBackup', params);
+        if (res.success) {
+          status.style.cssText = 'background: #e6f4ea; color: #137333;';
+          status.innerHTML = `✅ Backup Complete! <br><br> <a href="${res.url}" target="_blank"><strong>Open Document</strong></a>`;
+        } else {
+          throw new Error(res.error);
+        }
+      } catch (err) {
+        status.style.cssText = 'background: #fce8e6; color: #c5221f;';
+        status.innerHTML = `❌ Error: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Start Backup';
+      }
+    }
+
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+  </script>
+</body>
+</html>
